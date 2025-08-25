@@ -1,0 +1,36 @@
+﻿@model MeetingMinuteViewDTO
+
+<div class="card shadow mb-1 mt-2">
+    <div class="card-body">
+        <div class="row mb-3">
+            <label class="col-md-2 col-form-label">Product/Service</label>
+            <div class="col-md-5">
+                <select id="productDropdown" class="form-select form-select-sm">
+                    <option value="" disabled selected hidden>Select product/service</option>
+                    @foreach (var product in ViewBag.ProductList)
+                    {
+                        <option value="@product.ProductServiceId" data-name="@product.Name" data-unit="@product.Unit">@product.Name</option>
+                    }
+                </select>
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <label class="col-md-2 col-form-label">Quantity</label>
+            <div class="col-md-2">
+                <input type="number" id="quantityInput" class="form-control" />
+            </div>
+            <label class="col-md-1 col-form-label text-end">Unit</label>
+            <div class="col-md-2">
+                <input type="text" id="unitInput" class="form-control" readonly />
+            </div>
+        </div>
+
+        <input type="hidden" id="editIndex" value="-1" />
+        <button type="button" id="addProductBtn" class="btn btn-outline-primary mb-2">
+            <i class="bi bi-plus-square"></i> Add
+        </button>
+
+        <div id="rowError" class="text-danger small mt-2"></div>
+    </div>
+</div>

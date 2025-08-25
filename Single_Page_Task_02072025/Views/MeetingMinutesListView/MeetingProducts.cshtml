@@ -1,0 +1,34 @@
+﻿@model List<ProductDTO>
+
+@{
+    ViewData["Title"] = "Product List for Meeting";
+}
+
+<h4>Product Details for Meeting Minute</h4>
+
+@if (Model == null || Model.Count<0)
+{
+    <div class="alert alert-warning">No products found for this meeting.</div>
+}
+else
+{
+    <table class="table table-bordered table-striped">
+        <thead class="table-light">
+            <tr>
+                <th>Product Name</th>
+                <th>Unit</th>
+                <th>Quantity</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var c in Model)
+            {
+                <tr>
+                    <td>@c.Name</td>
+                    <td>@c.Unit</td>
+                    <td>@c.Quantity</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

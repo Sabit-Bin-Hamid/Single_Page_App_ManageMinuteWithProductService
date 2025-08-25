@@ -1,0 +1,197 @@
+﻿
+@model MeetingMinuteViewDTO
+
+<div class="container mt-4">
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    <form asp-action="Index" method="post">
+        <div class="container mt-4">
+            @if (!ViewData.ModelState.IsValid && ViewData.ModelState.ErrorCount > 0)
+            {
+                <div asp-validation-summary="All" class="alert alert-danger" role="alert"></div>
+            }
+            <partial name="Partials/_MeetingForm" model="Model" />
+            <partial name="Partials/_ProductService" model="Model" />
+            <partial name="Partials/_ProductListTable" model="Model" />
+
+            <div class="d-flex gap-2 mt-3">
+                <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Save</button>
+                <button type="reset" class="btn btn-secondary"><i class="bi bi-arrow-clockwise"></i> Refresh</button>
+               @*  <a asp-controller="MeetingMinutesListView" asp-action="IndexList" class="btn btn-info ms-auto">
+                    <i class="bi bi-list"></i> List
+                </a> *@
+            </div>
+            
+        </div>
+    </form>
+</div>
+
+
+@section Scripts {
+    <script>
+        
+        document.addEventListener("DOMContentLoaded", function () {
+            const productDropdown = document.getElementById("productDropdown");
+            const quantityInput = document.getElementById("quantityInput");
+            const unitInput = document.getElementById("unitInput");
+            const addBtn = document.getElementById("addProductBtn");
+            const tableBody = document.querySelector("#detailsTable tbody");
+            const editIndexInput = document.getElementById("editIndex");
+            const rowError = document.getElementById("rowError");
+            const customerDropdown = document.getElementById("customerDropdown");
+            const corporateRadio = document.getElementById("custCorporate");
+            const individualRadio = document.getElementById("custIndividual");
+            
+            function loadCustomers(customerType) {
+                debugger
+                fetch(`/MeetingAndProduct/GetAllCustomers?type=${customerType}`)
+                    .then(res => res.json()).then(data => {
+                        customerDropdown.innerHTML = '<option value="" disabled selected hidden>Select customer name</option>';
+                        data.forEach(c => {
+                            const option = document.createElement("option");
+                            option.value = c.id;
+                            option.textContent = c.name;
+                            customerDropdown.appendChild(option);
+                        });
+                    });
+            }
+            
+            if (corporateRadio.checked) {
+                debugger
+                loadCustomers("Corporate");
+            }
+            if (individualRadio.checked) {
+                loadCustomers("Individual");
+            }
+
+            corporateRadio.addEventListener("change", function () {
+                debugger;
+                if (this.checked) {
+                    loadCustomers("Corporate");
+                }
+            });
+            individualRadio.addEventListener("change", () => {
+                debugger;
+                if (individualRadio.checked) {
+                    loadCustomers("Individual");
+                }
+            });
+            productDropdown.addEventListener("change", function () {
+                debugger;
+                const selected = this.options[this.selectedIndex];
+                unitInput.value = selected.dataset.unit || "";
+            });
+
+            addBtn.addEventListener("click", function () {
+                debugger;
+                const productId = productDropdown.value;
+                const productName = productDropdown.options[productDropdown.selectedIndex]?.text || "";
+                const quantity = quantityInput.value;
+                const unit = unitInput.value;
+                const editIndex = parseInt(editIndexInput.value);
+
+                if (!productId || !quantity) {
+                    rowError.textContent = "Please select a product and enter quantity.";
+                    return;
+                }
+
+                rowError.textContent = "";
+
+                if (editIndex === -1) {
+                    if (tableBody.querySelector(".no-data")) { tableBody.innerHTML = ""; }
+
+                    const index = tableBody.children.length;
+                    const newRow = document.createElement("tr");
+                    newRow.innerHTML = `
+                                    <td></td>
+                                    <td><input type="hidden" name="Details[${index}].ProductServiceId" value="${productId}" />${productName}</td>
+                                    <td><input  name="Details[${index}].Quantity" class="form-control" value="${quantity}" /></td>
+                                    <td><input name="Details[${index}].Unit" class="form-control" value="${unit}" readonly /></td>
+                                    <td><button type="button" class="btn btn-sm btn-warning edit-row">Edit</button></td>
+                                    <td><button type="button" class="btn btn-sm btn-danger delete-row">Delete</button></td>
+                                `;
+                    tableBody.appendChild(newRow);
+                }
+                else {
+                    const row = tableBody.children[editIndex];
+                    row.children[1].innerHTML = `<input type="hidden" name="Details[${editIndex}].ProductServiceId" value="${productId}" />${productName}`;
+                    row.children[2].innerHTML = `<input name="Details[${editIndex}].Quantity" class="form-control" value="${quantity}" />`;
+                    row.children[3].innerHTML = `<input name="Details[${editIndex}].Unit" class="form-control" value="${unit}" readonly />`;
+                }
+                clearInputs();
+                reindexRows();
+            });
+
+            function clearInputs() {
+                debugger;
+                productDropdown.selectedIndex = 0;
+                quantityInput.value = "";
+                unitInput.value = "";
+                editIndexInput.value = -1;
+                addBtn.innerHTML = '<i class="bi bi-plus-square"></i> Add';
+            }
+
+            
+            tableBody.addEventListener("click", function (e) {
+                debugger
+                const row = e.target.closest("tr");
+                if (!row) return;
+
+                if (e.target.classList.contains("edit-row")) {
+                    const index = Array.from(tableBody.children).indexOf(row);
+                    const productId = row.querySelector("input[type='hidden']").value;
+                    const quantity = row.querySelector("input[name*='Quantity']").value;
+                    const unit = row.querySelector("input[name*='Unit']").value;
+
+                    productDropdown.value = productId;
+                    quantityInput.value = quantity;
+                    unitInput.value = unit;
+
+                    productDropdown.dispatchEvent(new Event("change"));
+
+                    editIndexInput.value = index;
+                    addBtn.innerHTML = '<i class="bi bi-check-square"></i> Update';
+                }
+                if (e.target.classList.contains("delete-row")) {
+                    row.remove();
+                    if (tableBody.children.length === 0) {
+                        tableBody.innerHTML = `
+                                        <tr class="no-data">
+                                            <td colspan="6" class="text-center">No matching records found</td>
+                                        </tr>`;
+                    }
+                    reindexRows();
+                    clearInputs();
+                }
+            });
+
+            function reindexRows() {
+                debugger;
+                Array.from(tableBody.children).forEach((row, idx) => {
+                    debugger;
+                    if (row.classList.contains("no-data")) return;
+
+                    row.children[0].textContent = idx + 1;
+                    row.querySelector("input[type='hidden']").name = `Details[${idx}].ProductServiceId`;
+                    row.querySelector("input[name*='Quantity']").name = `Details[${idx}].Quantity`;
+                    row.querySelector("input[name*='Unit']").name = `Details[${idx}].Unit`;
+                });
+            }
+        });
+    </script>
+
+}

@@ -1,0 +1,57 @@
+﻿@model List<MeetingMinute>
+
+@{
+    ViewData["Title"] = "Meeting Minutes List";
+}
+
+<h3>Meeting Minutes</h3>
+
+@if (Model == null || Model.Count < 0)
+{
+    <div class="alert alert-warning" role="alert">
+        No data exists.
+    </div>
+}
+else
+{
+    <table class="table table-bordered table-striped">
+        <thead class="table-light">
+            <tr>
+                <th>Customer Type</th>
+                <th>Meeting Date</th>
+                <th>Meeting Time</th>
+                <th>Place</th>
+                <th>Client Side</th>
+                <th>Host Side</th>
+                <th>Agenda</th>
+                <th>Discussion</th>
+                <th>Decision</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>@item.CustomerType</td>
+                    <td>@item.MeetingDate?.ToString("yyyy-MM-dd")</td>
+                    <td>
+                        @(item.MeetingTime.HasValue? DateTime.Today.Add(item.MeetingTime.Value).ToString("hh:mm tt") : "")
+                    </td>
+
+                    <td>@item.MeetingPlace</td>
+                    <td>@item.AttendsFromClientSide</td>
+                    <td>@item.AttendsFromHostSide</td>
+                    <td>@item.MeetingAgenda</td>
+                    <td>@item.MeetingDiscussion</td>
+                    <td>@item.MeetingDecision</td>
+                    <td>
+                        @* <a asp-action="Edit" asp-route-id="@item.MeetingMinuteId" class="btn btn-sm btn-primary">Edit</a>*@
+                        <a asp-controller="MeetingMinutesListView" asp-action="MeetingProducts" asp-route-MeetingMinuteId="@item.MeetingMinuteId" class="btn btn-sm btn-info">Details</a>
+                        @* <a asp-action="Delete" asp-route-id="@item.MeetingMinuteId" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">Delete</a> *@
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
